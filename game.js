@@ -80,6 +80,110 @@ function resetState() {
     };
 }
 
+// ── SoundFX (Web Audio API) ──────────────────────────────────────────────────
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+const audioCtx = new AudioContext();
+
+const sfx = {
+    jump: () => {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.2);
+    },
+    roll: () => {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.2);
+    },
+    correct: () => {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+    },
+    wrong: () => {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+    },
+    win: () => {
+        setTimeout(() => sfx.correct(), 0);
+        setTimeout(() => sfx.correct(), 150);
+        setTimeout(() => sfx.correct(), 300);
+    },
+    move: () => {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+    },
+    click: () => {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.05);
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.05);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.05);
+    }
+};
+
+function unlockAudio() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if ('speechSynthesis' in window) {
+        const utter = new SpeechSynthesisUtterance('');
+        utter.volume = 0;
+        window.speechSynthesis.speak(utter);
+    }
+}
+
 // ── TTS ─────────────────────────────────────────────────────────────────────
 function speak(text) {
     if (!('speechSynthesis' in window)) return;
@@ -148,6 +252,9 @@ function showFeedbackCustom(message, type) {
 
 function showResult() {
     const perfect = state.wrongCount === 0;
+    if (perfect) {
+        sfx.win();
+    }
     resultIcon.innerHTML = perfect ? '<i class="fa-solid fa-trophy" style="color:#facc15"></i>' : state.correctCount >= TOTAL_Q / 2 ? '<i class="fa-solid fa-star" style="color:#facc15"></i>' : '<i class="fa-solid fa-face-smile" style="color:#3b82f6"></i>';
     resultTitle.textContent = perfect ? 'Wah, Hana Hebat!' : state.correctCount >= TOTAL_Q / 2 ? 'Pintar Sekali!' : 'Tetap Semangat Ya!';
     resultMessage.textContent = `Hana menjawab ${state.correctCount} dari ${TOTAL_Q} nama buah dengan benar.`;
@@ -155,7 +262,7 @@ function showResult() {
     resultWrong.textContent   = state.wrongCount;
     resultScore.textContent   = state.score;
     resultScreen.classList.remove('hidden');
-    speak(perfect ? 'Wah, Hana Hebat!' : 'Pintar Sekali!');
+    speak(perfect ? 'Perfect run, amazing job!' : state.correctCount >= TOTAL_Q / 2 ? 'Great job, keep it up!' : 'Keep practicing, you can do it!');
 }
 
 // ── Animation helpers ────────────────────────────────────────────────────────
@@ -199,11 +306,13 @@ function handleGateHit(gate, gateGroup) {
 
     if (isFullyCorrect) {
         // Correct fruit + correct action
+        sfx.correct();
         state.score += 100;
         state.correctCount++;
         showFeedback(true);
     } else if (isCorrectFruit && !isCorrectAction) {
         // Right fruit but wrong action
+        sfx.wrong();
         state.hearts--;
         state.wrongCount++;
         showFeedbackCustom('<i class="fa-solid fa-lemon"></i> Buah benar, tapi salah gaya!', 'wrong');
@@ -212,6 +321,7 @@ function handleGateHit(gate, gateGroup) {
         if (state.hearts <= 0) { endGame(false); return; }
     } else {
         // Wrong fruit
+        sfx.wrong();
         state.hearts--;
         state.wrongCount++;
         showFeedback(false);
@@ -254,15 +364,22 @@ function endGame(won) {
 // ── Keyboard & Touch input ───────────────────────────────────────────────────
 function moveLeft() {
     if (!state.running) return;
-    if (state.targetLane > 0) state.targetLane--;
+    if (state.targetLane > 0) {
+        sfx.move();
+        state.targetLane--;
+    }
 }
 function moveRight() {
     if (!state.running) return;
-    if (state.targetLane < 2) state.targetLane++;
+    if (state.targetLane < 2) {
+        sfx.move();
+        state.targetLane++;
+    }
 }
 function doJump() {
     if (!state.running) return;
     if (!state.isJumping && !state.isRolling) {
+        sfx.jump();
         state.isJumping = true;
         state.jumpVY    = 9;
         playAnim('jump', 0.1);
@@ -271,6 +388,7 @@ function doJump() {
 function doRoll() {
     if (!state.running) return;
     if (!state.isJumping && !state.isRolling) {
+        sfx.roll();
         state.isRolling  = true;
         state.rollTimer  = 0.8;
         playAnim('roll', 0.1);
@@ -493,8 +611,14 @@ function gameLoop() {
 }
 
 // ── Button listeners ─────────────────────────────────────────────────────────
-startBtn.addEventListener('click', startGame);
+startBtn.addEventListener('click', () => {
+    sfx.click();
+    unlockAudio();
+    startGame();
+});
 restartBtn.addEventListener('click', () => {
+    sfx.click();
+    unlockAudio();
     // Clean up old objects from scene
     state.gates.forEach(g => scene.remove(g));
     if (finishLineGroup) scene.remove(finishLineGroup);
@@ -502,6 +626,7 @@ restartBtn.addEventListener('click', () => {
     startGame();
 });
 ttsRepeat.addEventListener('click', () => {
+    sfx.click();
     if (state.questionIdx < TOTAL_Q) speak(state.questions[state.questionIdx].correct);
 });
 
