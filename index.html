@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Hana - Belajar Bahasa Inggris!</title>
+    <meta name="description" content="A fun 3D running game where you learn English fruit names by choosing the correct gate.">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loader-container">
+            <div class="loader-ring"></div>
+            <div class="loader-text">
+                <h1><i class="fa-solid fa-lemon"></i> Game Hana</h1>
+                <p id="loading-status">Tunggu sebentar ya Hana...</p>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progress-bar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Start Screen -->
+    <div id="start-screen" class="hidden">
+        <div class="start-content">
+            <div class="title-group">
+                <h1 class="game-title"><i class="fa-solid fa-lemon"></i> Game Hana</h1>
+                <p class="game-subtitle">Halo Hana Hafiza! Yuk Belajar Bahasa Inggris!</p>
+            </div>
+            <div class="how-to-play">
+                <h3>Cara Bermain</h3>
+                <div class="instructions">
+                    <div class="instruction-item">
+                        <span class="key"><i class="fa-solid fa-arrow-left"></i> <i class="fa-solid fa-arrow-right"></i></span>
+                        <span>Geser Kiri / Kanan</span>
+                    </div>
+                    <div class="instruction-item">
+                        <span class="key"><i class="fa-solid fa-arrow-up"></i></span>
+                        <span>Lompat</span>
+                    </div>
+                    <div class="instruction-item">
+                        <span class="key"><i class="fa-solid fa-arrow-down"></i></span>
+                        <span>Berguling</span>
+                    </div>
+                </div>
+                <p class="instruction-desc">Dengarkan nama buahnya, dan pilih gawang yang benar! Gawang biru untuk berguling, gawang hijau untuk lari, dan gawang kuning untuk melompat!</p>
+            </div>
+            <button id="start-btn" class="btn-start">
+                <span><i class="fa-solid fa-play"></i> MULAI MAIN YUK!</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Game HUD -->
+    <div id="game-hud" class="hidden">
+        <div class="hud-top">
+            <div class="hud-score">
+                <span class="hud-label">Nilai</span>
+                <span class="hud-value" id="hud-score">0</span>
+            </div>
+            <div class="hud-question" id="hud-question"></div>
+            <div class="hud-progress">
+                <span class="hud-label">Soal</span>
+                <span class="hud-value" id="hud-progress">0/10</span>
+            </div>
+        </div>
+        <div class="hud-hearts" id="hud-hearts">
+            <i class="fa-solid fa-heart"></i><i class="fa-solid fa-heart"></i><i class="fa-solid fa-heart"></i>
+        </div>
+        <!-- TTS Repeat Button -->
+        <button id="tts-repeat" class="tts-btn" title="Repeat"><i class="fa-solid fa-volume-high"></i></button>
+    </div>
+
+    <!-- Mobile Touch Controls -->
+    <div id="mobile-controls" class="hidden">
+        <button class="touch-btn" id="btn-left"><i class="fa-solid fa-arrow-left"></i></button>
+        <button class="touch-btn" id="btn-right"><i class="fa-solid fa-arrow-right"></i></button>
+        <button class="touch-btn" id="btn-up"><i class="fa-solid fa-arrow-up"></i></button>
+        <button class="touch-btn" id="btn-down"><i class="fa-solid fa-arrow-down"></i></button>
+    </div>
+
+    <!-- Feedback overlay -->
+    <div id="feedback-overlay" class="hidden">
+        <div id="feedback-content"></div>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="result-screen" class="hidden">
+        <div class="result-content">
+            <div id="result-icon"></div>
+            <h1 id="result-title"></h1>
+            <p id="result-message"></p>
+            <div class="result-stats">
+                <div class="stat">
+                    <span class="stat-value" id="result-correct">0</span>
+                    <span class="stat-label">Benar</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="result-wrong">0</span>
+                    <span class="stat-label">Salah</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value" id="result-score">0</span>
+                    <span class="stat-label">Nilai</span>
+                </div>
+            </div>
+            <button id="restart-btn" class="btn-start">
+                <span><i class="fa-solid fa-rotate-right"></i> MAIN LAGI YUK!</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Three.js & Game -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.163.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.163.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module" src="game.js"></script>
+</body>
+</html>
