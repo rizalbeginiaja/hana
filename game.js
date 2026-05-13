@@ -507,12 +507,13 @@ function startGame() {
 
     state.running = true;
 
-    // Play run animation + speak first question
+    // Play run animation
     setTimeout(() => {
         playAnim('run');
         updateHud();
-        speak(state.questions[0].correct);
     }, 200);
+    // Speak synchronously to satisfy mobile browser policies
+    speak(state.questions[0].correct);
 }
 
 // ── Camera follow (pre-allocated vectors to avoid GC stutter) ────────────────
