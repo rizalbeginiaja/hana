@@ -2,7 +2,18 @@
 import * as THREE from 'three';
 
 const LANE_X = [-3, 0, 3];
-const FRUITS = ['apple','avocado','banana','cherry','coconut','grape','mango','strawberry','tomato','watermelon'];
+const PLANT_QUESTIONS = [
+    { q: "Tempat utama terjadinya fotosintesis", a: "Daun", w: ["Akar", "Bunga"] },
+    { q: "Menyerap air dan mineral dari tanah", a: "Akar", w: ["Batang", "Daun"] },
+    { q: "Zat hijau daun disebut", a: "Klorofil", w: ["Stomata", "Glukosa"] },
+    { q: "Gas yang dihirup tumbuhan", a: "Karbon dioksida", w: ["Oksigen", "Nitrogen"] },
+    { q: "Gas yang dihasilkan fotosintesis", a: "Oksigen", w: ["Karbon", "Air"] },
+    { q: "Sumber energi utama fotosintesis", a: "Matahari", w: ["Angin", "Hujan"] },
+    { q: "Menopang tumbuhan agar tegak", a: "Batang", w: ["Daun", "Akar"] },
+    { q: "Alat perkembangbiakan tumbuhan", a: "Bunga", w: ["Batang", "Akar"] },
+    { q: "Makanan hasil fotosintesis", a: "Glukosa", w: ["Garam", "Vitamin"] },
+    { q: "Lubang napas di daun", a: "Stomata", w: ["Lentisel", "Akar"] }
+];
 const HEIGHT_LEVELS = ['low', 'mid', 'high'];
 
 // Adjusted heights:
@@ -10,9 +21,9 @@ const HEIGHT_LEVELS = ['low', 'mid', 'high'];
 // MID: bar at 1.6m → walk through (was 3.2, halved)
 // HIGH: bar at 2.8m → must jump (close to old mid ~3.0)
 const HEIGHT_CONFIG = {
-    low:  { imageY: 0.55, barY: 0.9,  postHeight: 0.9, imageSize: 0.8 },
-    mid:  { imageY: 1.1,  barY: 1.6,  postHeight: 1.6, imageSize: 1.0 },
-    high: { imageY: 2.7,  barY: 3.5,  postHeight: 3.5, imageSize: 1.1 },
+    low:  { imageY: 0.55, barY: 0.9,  postHeight: 0.9, imageSize: 1.6 },
+    mid:  { imageY: 1.1,  barY: 1.6,  postHeight: 1.6, imageSize: 1.8 },
+    high: { imageY: 2.7,  barY: 3.5,  postHeight: 3.5, imageSize: 2.0 },
 };
 
 export function shuffle(arr) {
@@ -25,52 +36,76 @@ export function shuffle(arr) {
 }
 
 export function buildQuestions() {
-    return shuffle(FRUITS).map(correct => {
-        const wrongs = shuffle(FRUITS.filter(f => f !== correct)).slice(0, 2);
-        const options = shuffle([correct, ...wrongs]);
+    return shuffle(PLANT_QUESTIONS).map(item => {
+        const correct = item.a;
+        const options = shuffle([correct, ...item.w]);
         const heights = shuffle([...HEIGHT_LEVELS]);
-        const optionsWithHeight = options.map((fruit, i) => ({
-            fruit,
+        const optionsWithHeight = options.map((answer, i) => ({
+            answer,
             height: heights[i],
         }));
-        const correctEntry = optionsWithHeight.find(o => o.fruit === correct);
-        return { correct, options: optionsWithHeight, correctHeight: correctEntry.height };
+        const correctEntry = optionsWithHeight.find(o => o.answer === correct);
+        return { 
+            questionText: item.q,
+            correct: correct, 
+            options: optionsWithHeight, 
+            correctHeight: correctEntry.height 
+        };
     });
 }
 
-// SVG to Canvas texture
+// Text to Canvas texture
 const textureCache = {};
-function getFruitTexture(name) {
-    if (textureCache[name]) return textureCache[name];
+function getTextTexture(text) {
+    if (textureCache[text]) return textureCache[text];
 
+    const S = 1024;
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256;
+    canvas.width = S;
+    canvas.height = S;
     const ctx = canvas.getContext('2d');
+
+    // Transparent background — no box
+    ctx.clearRect(0, 0, S, S);
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round';
+
+    const words = text.split(' ');
+    const lines = [];
+    if (words.length <= 1) {
+        lines.push(text);
+    } else if (words.length === 2) {
+        lines.push(words[0], words[1]);
+    } else {
+        lines.push(words.slice(0, Math.ceil(words.length / 2)).join(' '));
+        lines.push(words.slice(Math.ceil(words.length / 2)).join(' '));
+    }
+
+    // Fixed large font size for all gates (uniform)
+    let fontSize = 240;
+    ctx.font = `bold ${fontSize}px "Lilita One", sans-serif`;
+
+    const lineH = fontSize * 1.15;
+    const totalH = lines.length * lineH;
+    const startY = (S - totalH) / 2 + fontSize * 0.55;
+
+    ctx.font = `bold ${fontSize}px "Lilita One", sans-serif`;
+    lines.forEach((line, i) => {
+        const ly = startY + i * lineH;
+        // Thick black stroke for depth
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = fontSize * 0.22;
+        ctx.strokeText(line, S / 2, ly);
+        // White fill
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(line, S / 2, ly);
+    });
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
-    textureCache[name] = texture;
-
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-        ctx.clearRect(0, 0, 256, 256);
-        const s = Math.min(256 / img.width, 256 / img.height) * 0.9;
-        const w = img.width * s;
-        const h = img.height * s;
-        ctx.drawImage(img, (256 - w) / 2, (256 - h) / 2, w, h);
-        texture.needsUpdate = true;
-    };
-    img.onerror = () => {
-        ctx.fillStyle = '#333';
-        ctx.font = 'bold 32px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(name, 128, 128);
-        texture.needsUpdate = true;
-    };
-    img.src = `img/${name}.svg`;
+    textureCache[text] = texture;
     return texture;
 }
 
@@ -100,19 +135,11 @@ function createGlowTexture(hexColor) {
 }
 
 function getGlowColor(level) {
-    switch (level) {
-        case 'low':  return '#3b82f6';
-        case 'mid':  return '#22c55e';
-        case 'high': return '#f59e0b';
-    }
+    return '#ff1111';
 }
 
 function getBarColor(level) {
-    switch (level) {
-        case 'low':  return 0x3b82f6;
-        case 'mid':  return 0x22c55e;
-        case 'high': return 0xf59e0b;
-    }
+    return 0x333333;
 }
 
 export function createGateGroup(scene, question, zPos) {
@@ -124,71 +151,99 @@ export function createGateGroup(scene, question, zPos) {
 
     question.options.forEach((opt, i) => {
         const x = LANE_X[i];
-        const fruit = opt.fruit;
+        const answer = opt.answer;
         const level = opt.height;
-        const isCorrect = fruit === question.correct;
+        const isCorrect = answer === question.correct;
         const hc = HEIGHT_CONFIG[level];
         const barColor = getBarColor(level);
 
-        // Side posts
+        // Side posts — original dark style
         const postGeo = new THREE.CylinderGeometry(0.06, 0.06, hc.postHeight, 8);
-        const postMat = new THREE.MeshStandardMaterial({ color: barColor, roughness: 0.4, metalness: 0.2 });
+        const postMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.4, metalness: 0.2 });
         const left  = new THREE.Mesh(postGeo, postMat);
         const right = new THREE.Mesh(postGeo, postMat);
         left.position.set(x - 1.1, hc.postHeight / 2, 0);
         right.position.set(x + 1.1, hc.postHeight / 2, 0);
         group.add(left, right);
 
-        // Top bar
+        // Top bar — original dark style
         const topGeo = new THREE.BoxGeometry(2.3, 0.12, 0.12);
         const topMat = new THREE.MeshStandardMaterial({
-            color: barColor, roughness: 0.3, metalness: 0.2,
-            emissive: barColor, emissiveIntensity: 0.3,
+            color: 0x333333, roughness: 0.3, metalness: 0.2,
         });
         const top = new THREE.Mesh(topGeo, topMat);
         top.position.set(x, hc.barY, 0);
+        top.userData.breakable = true;
+        top.userData.breakType = 'bar';
+        top.userData.laneIdx = i;
         group.add(top);
 
-        // Glow behind fruit (stronger opacity)
-        const glowSize = hc.imageSize * 2.0;
-        const glowGeo = new THREE.PlaneGeometry(glowSize, glowSize);
-        const glowMat = new THREE.MeshBasicMaterial({
-            map: createGlowTexture(getGlowColor(level)),
+        // ── Inner panel (gradient glow inside the frame) ──────────────────────
+        const panelW = 2.1;        // just inside the posts
+        const panelH = hc.barY;   // floor to top bar
+        const panelY = panelH / 2;
+
+        const panelCanvas = document.createElement('canvas');
+        panelCanvas.width = 256;
+        panelCanvas.height = 512;
+        const pc = panelCanvas.getContext('2d');
+
+        // Gradient: transparent red
+        const grad = pc.createLinearGradient(0, 0, 0, 512);
+        grad.addColorStop(0,   'rgba(200, 0, 0, 0.0)');
+        grad.addColorStop(0.4, 'rgba(220, 20, 20, 0.55)');
+        grad.addColorStop(1,   'rgba(180, 0, 0, 0.75)');
+        pc.fillStyle = grad;
+        pc.fillRect(0, 0, 256, 512);
+
+        const panelTex = new THREE.CanvasTexture(panelCanvas);
+        panelTex.colorSpace = THREE.SRGBColorSpace;
+
+        const panelGeo = new THREE.PlaneGeometry(panelW, panelH);
+        const panelMat = new THREE.MeshBasicMaterial({
+            map: panelTex,
             transparent: true,
+            opacity: 0.88,
             side: THREE.DoubleSide,
             depthWrite: false,
         });
-        const glow = new THREE.Mesh(glowGeo, glowMat);
-        glow.position.set(x, hc.imageY, -0.05);
-        group.add(glow);
+        const panel = new THREE.Mesh(panelGeo, panelMat);
+        panel.position.set(x, panelY, -0.05);
+        panel.userData.isImageContent = true;
+        group.add(panel);
 
-        // Fruit image (floating)
-        const imgGeo = new THREE.PlaneGeometry(hc.imageSize, hc.imageSize);
+        // ── Text label floating above the gate (no height limit) ──────────────────
+        const textSize = 2.0;
+        const imgGeo = new THREE.PlaneGeometry(textSize, textSize);
         const imgMat = new THREE.MeshBasicMaterial({
-            map: getFruitTexture(fruit),
+            map: getTextTexture(answer),
             transparent: true,
             side: THREE.DoubleSide,
             depthWrite: false,
         });
         const img = new THREE.Mesh(imgGeo, imgMat);
-        img.position.set(x, hc.imageY, 0.01);
+        img.position.set(x, hc.barY + 0.3, 0.02); // floating slightly above top bar
+        img.userData.isImageContent = true;
         group.add(img);
 
-        // Action icon below fruit
-        const iconCanvas = document.createElement('canvas');
-        iconCanvas.width = 64;
-        iconCanvas.height = 64;
-        const ictx = iconCanvas.getContext('2d');
-        ictx.font = 'bold 40px Arial';
-        ictx.textAlign = 'center';
-        ictx.textBaseline = 'middle';
-        ictx.fillStyle = getGlowColor(level);
-        ictx.fillText(level === 'low' ? '⬇' : level === 'mid' ? '➡' : '⬆', 32, 32);
-        const iconTex = new THREE.CanvasTexture(iconCanvas);
-        const iconMat = new THREE.MeshBasicMaterial({ map: iconTex, transparent: true, side: THREE.DoubleSide });
-        const iconMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.35), iconMat);
-        iconMesh.position.set(x, hc.imageY - hc.imageSize * 0.65, 0.02);
-        group.add(iconMesh);
+
+        // (Action icon removed to declutter interface)
+
+        // Solid wall for high gates — visual cue to jump
+        if (level === 'high') {
+            const wallHeight = 1.3;
+            const wallGeo = new THREE.BoxGeometry(2.2, wallHeight, 0.1);
+            const wallMat = new THREE.MeshStandardMaterial({
+                color: 0x222222,
+                roughness: 0.7,
+            });
+            const wall = new THREE.Mesh(wallGeo, wallMat);
+            wall.position.set(x, wallHeight / 2, 0);
+            wall.userData.breakable = true;
+            wall.userData.breakType = 'wall';
+            wall.userData.laneIdx = i;
+            group.add(wall);
+        }
 
         // Invisible collider
         const colGeo = new THREE.BoxGeometry(1.9, 4, 1.0);
@@ -196,7 +251,7 @@ export function createGateGroup(scene, question, zPos) {
         const collider = new THREE.Mesh(colGeo, colMat);
         collider.position.set(x, 2, 0);
         collider.userData.isGate = true;
-        collider.userData.fruit = fruit;
+        collider.userData.fruit = answer;
         collider.userData.isCorrect = isCorrect;
         collider.userData.laneIndex = i;
         collider.userData.height = level;
@@ -213,7 +268,7 @@ export function createFinishLine(scene, zPos) {
 
     // Posts
     const postGeo = new THREE.CylinderGeometry(0.2, 0.2, 7, 8);
-    const postMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+    const postMat = new THREE.MeshBasicMaterial({ color: 0x333333 });
     [-5, 5].forEach(x => {
         const post = new THREE.Mesh(postGeo, postMat);
         post.position.set(x, 3.5, 0);
@@ -232,7 +287,7 @@ export function createFinishLine(scene, zPos) {
     const c = document.createElement('canvas');
     c.width = 512; c.height = 96;
     const ctx = c.getContext('2d');
-    ctx.fillStyle = '#7c3aed';
+    ctx.fillStyle = '#ff1111';
     ctx.fillRect(0, 0, 512, 96);
     ctx.fillStyle = '#fff';
     ctx.font = 'bold 56px Arial';

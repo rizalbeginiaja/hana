@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Hana - Belajar Bahasa Inggris!</title>
-    <meta name="description" content="A fun 3D running game where you learn English fruit names by choosing the correct gate.">
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>English Sprint - Uji Kosakata!</title>
+    <meta name="description" content="Game lari 3D seru untuk SD Kelas 6 belajar bahasa Inggris. Kumpulkan kombo, hindari paku, dan meluncur di jalur cepat!">
+    <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <link rel="icon" href="data:,">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,8 +16,8 @@
         <div class="loader-container">
             <div class="loader-ring"></div>
             <div class="loader-text">
-                <h1><i class="fa-solid fa-lemon"></i> Game Hana</h1>
-                <p id="loading-status">Tunggu sebentar ya Hana...</p>
+                <h1><i class="fa-solid fa-bolt"></i> English Sprint</h1>
+                <p id="loading-status">Memuat Arena...</p>
                 <div class="progress-bar-container">
                     <div class="progress-bar" id="progress-bar"></div>
                 </div>
@@ -26,32 +27,39 @@
 
     <!-- Start Screen -->
     <div id="start-screen" class="hidden">
-        <div class="start-content">
-            <div class="title-group">
-                <h1 class="game-title"><i class="fa-solid fa-lemon"></i> Game Hana</h1>
-                <p class="game-subtitle">Halo Hana Hafiza! Yuk Belajar Bahasa Inggris!</p>
+        <div class="start-content dark-mode-split">
+            <div class="start-left">
+                <img src="img/poster.webp" alt="Poster Game" class="poster-img">
             </div>
-            <div class="how-to-play">
-                <h3>Cara Bermain</h3>
-                <div class="instructions">
-                    <div class="instruction-item">
-                        <span class="key"><i class="fa-solid fa-arrow-left"></i> <i class="fa-solid fa-arrow-right"></i></span>
-                        <span>Geser Kiri / Kanan</span>
-                    </div>
-                    <div class="instruction-item">
-                        <span class="key"><i class="fa-solid fa-arrow-up"></i></span>
-                        <span>Lompat</span>
-                    </div>
-                    <div class="instruction-item">
-                        <span class="key"><i class="fa-solid fa-arrow-down"></i></span>
-                        <span>Berguling</span>
-                    </div>
+            <div class="start-right">
+                <div class="title-group">
+                    <h1 class="game-title"><i class="fa-solid fa-bolt"></i> English Sprint</h1>
+                    <p class="game-mission">
+                        Hutan Gelap ini dipenuhi bayang-bayang ketidaktahuan. Hanya dengan mengumpulkan pengetahuan (Buku & Bintang) kamu bisa menembus kegelapan dan membebaskan pikiran Hana. Bersiaplah menerobos rintangan dan temukan jalan keluar menuju kebenaran!
+                    </p>
                 </div>
-                <p class="instruction-desc">Dengarkan nama buahnya, dan pilih gawang yang benar! Gawang biru untuk berguling, gawang hijau untuk lari, dan gawang kuning untuk melompat!</p>
+                <div class="how-to-play">
+                    <h3>Cara Bermain</h3>
+                    <div class="instructions">
+                        <div class="instruction-item">
+                            <span class="key"><i class="fa-solid fa-arrow-left"></i> <i class="fa-solid fa-arrow-right"></i></span>
+                            <span>Geser Kiri / Kanan</span>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="key"><i class="fa-solid fa-arrow-up"></i></span>
+                            <span>Lompat</span>
+                        </div>
+                        <div class="instruction-item">
+                            <span class="key"><i class="fa-solid fa-arrow-down"></i></span>
+                            <span>Berguling</span>
+                        </div>
+                    </div>
+                    <p class="instruction-desc">Dengarkan kata dalam bahasa Inggris, dan pilih gawang dengan arti yang tepat. <b>Makin sering benar, lari makin ngebut dan terbang! Makin sering salah, jalannya bakal merangkak!</b></p>
+                </div>
+                <button id="start-btn" class="btn-start">
+                    <span><i class="fa-solid fa-play"></i> MULAI MAIN YUK!</span>
+                </button>
             </div>
-            <button id="start-btn" class="btn-start">
-                <span><i class="fa-solid fa-play"></i> MULAI MAIN YUK!</span>
-            </button>
         </div>
     </div>
 
@@ -62,14 +70,21 @@
                 <span class="hud-label">Nilai</span>
                 <span class="hud-value" id="hud-score">0</span>
             </div>
-            <div class="hud-question" id="hud-question"></div>
+            <div class="hud-stars" style="display:flex;flex-direction:column;align-items:center;background:rgba(0,0,0,0.5);padding:4px 10px;border-radius:10px;border:2px solid #000;min-width:60px;">
+                <span class="hud-label"><i class="fa-solid fa-star" style="color:#ffd700"></i></span>
+                <span class="hud-value" id="hud-star-count" style="color:#ffd700">0/10</span>
+            </div>
+            <div class="hud-hearts" id="hud-hearts">
+                <i class="fa-solid fa-heart"></i><i class="fa-solid fa-heart"></i><i class="fa-solid fa-heart"></i><i class="fa-solid fa-heart"></i>
+            </div>
             <div class="hud-progress">
                 <span class="hud-label">Soal</span>
                 <span class="hud-value" id="hud-progress">0/10</span>
             </div>
         </div>
-        <div class="hud-hearts" id="hud-hearts">
-            <i class="fa-solid fa-heart"></i><i class="fa-solid fa-heart"></i><i class="fa-solid fa-heart"></i>
+        <div class="hud-bottom">
+            <div class="hud-question" id="hud-question"></div>
+            <div class="hud-next" id="hud-next"></div>
         </div>
         <!-- TTS Repeat Button -->
         <button id="tts-repeat" class="tts-btn" title="Repeat"><i class="fa-solid fa-volume-high"></i></button>
